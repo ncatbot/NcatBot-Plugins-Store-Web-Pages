@@ -1,0 +1,84 @@
+@import './base.css';
+
+:root {
+  --primary-color: #ff69b4;
+  --primary-color-dark: #ff1493;
+  --primary-color-light: #ffb6c1;
+  --bg-color: #ffffff;
+  --text-color: #333333;
+  --text-color-light: #888888;
+  --border-radius: 16px;
+  --box-shadow: 0 6px 15px rgba(255, 105, 180, 0.1);
+  --box-shadow-hover: 0 10px 25px rgba(255, 105, 180, 0.15);
+  --border-color: rgba(255, 192, 203, 0.3);
+  --transition: all 0.3s ease;
+}
+
+body {
+  font-family:
+    'Inter', 'Helvetica Neue', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background-color: #fefeff;
+  color: var(--text-color);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+#app {
+  width: 100%;
+  margin: 0 auto;
+  font-weight: normal;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* 全局链接样式 */
+a {
+  text-decoration: none;
+  color: var(--primary-color);
+  transition: var(--transition);
+}
+
+a:hover {
+  color: var(--primary-color-dark);
+}
+
+/* 粉色阴影效果 */
+.pink-shadow {
+  box-shadow: 0 4px 15px rgba(255, 105, 180, 0.15);
+}
+
+/* 全局图标样式 */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none;
+  }
+}
+
+/* Element Plus 自定义主题 */
+:root {
+  --el-color-primary: var(--primary-color);
+  --el-color-primary-light-3: var(--primary-color-light);
+  --el-color-primary-dark-2: var(--primary-color-dark);
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 105, 180, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 105, 180, 0.5);
+}
