@@ -35,12 +35,19 @@
       <div class="plugin-dependencies">
         <h4><i-mdi-puzzle-outline class="icon"></i-mdi-puzzle-outline> 依赖项</h4>
         <ul>
-            <li v-for="dep in plugin.dependencies" :key="dep" :class="{ 'missing': !isPluginExist(dep) }">
-            <el-tooltip v-if="!isPluginExist(dep)" content="插件状态异常" placement="top" effect="light" popper-class="custom-tooltip">
-              <a @click="handleMissingPlugin(dep)">{{ dep }}</a>
-            </el-tooltip>
-            <a v-else-if="dep === 'NcatBot'" href="https://github.com/liyihao1110/NcatBot" target="_blank">{{ dep }}</a>
-            <a v-else href="#" @click.prevent="searchForPlugin(dep)">{{ dep }}</a>
+            <template v-if="plugin.dependencies && plugin.dependencies.length > 0">
+              <li v-for="dep in plugin.dependencies" 
+                  :key="dep" 
+                  :class="{ 'missing': !isPluginExist(dep) }">
+                <el-tooltip v-if="!isPluginExist(dep)" content="插件状态异常" placement="top" effect="light" popper-class="custom-tooltip">
+                  <a @click="handleMissingPlugin(dep)">{{ dep }}</a>
+                </el-tooltip>
+                <a v-else-if="dep === 'NcatBot'" href="https://github.com/liyihao1110/NcatBot" target="_blank">{{ dep }}</a>
+                <a v-else href="#" @click.prevent="searchForPlugin(dep)">{{ dep }}</a>
+              </li>
+            </template>
+            <li v-else class="no-dependency">
+              <span>无依赖</span>
             </li>
         </ul>
       </div>
@@ -462,6 +469,25 @@ function resetCard(event: MouseEvent) {
 .plugin-dependencies li.missing:hover {
   background-color: rgba(255, 0, 0, 0.08);
   border-color: rgba(255, 0, 0, 0.3);
+}
+
+.plugin-dependencies li.no-dependency {
+  background-color: rgba(154, 205, 50, 0.1);
+  border: 1px solid rgba(154, 205, 50, 0.3);
+  color: #6b8e23;
+}
+
+.plugin-dependencies li.no-dependency:hover {
+  background-color: rgba(154, 205, 50, 0.15);
+  border-color: rgba(154, 205, 50, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(154, 205, 50, 0.1);
+}
+
+.plugin-dependencies li.no-dependency span {
+  color: #6b8e23;
+  position: relative;
+  z-index: 1;
 }
 
 .plugin-dependencies a {
