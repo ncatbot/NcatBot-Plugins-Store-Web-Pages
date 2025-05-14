@@ -1,104 +1,132 @@
 <template>
-  <div class="store-container">
-    <header class="store-header">
-      <div class="store-title">
-        <h1>NcatBot 插件商店</h1>
-        <div v-if="lastUpdate" class="last-update">最后更新: {{ formatDate(lastUpdate) }}</div>
+  <div class="store-container with-sidebar">
+    <aside class="sidebar">
+      <div class="sidebar-title"><i-mdi-tag-multiple class="icon" /> 标签筛选</div>
+      <div class="tag-list">
+        <div
+          v-for="tag in allTags"
+          :key="tag.name"
+          class="tag-filter-item"
+          :class="{ selected: selectedTags.includes(tag.name) }"
+          @click="toggleTag(tag.name)"
+        >
+          <i-mdi-tag class="icon" />
+          <span class="tag-name">{{ tag.name }}</span>
+          <span class="tag-count">({{ tag.count }})</span>
+        </div>
+        <div
+          class="tag-filter-item unclassified"
+          :class="{ selected: selectedTags.includes('__unclassified__') }"
+          @click="toggleTag('__unclassified__')"
+        >
+          <i-mdi-tag-off class="icon" />
+          <span class="tag-name">未分类</span>
+          <span class="tag-count">({{ unclassifiedCount }})</span>
+        </div>
       </div>
-      <div class="social-links">
-        <a v-for="link in socialLinks" :key="link.link" :href="link.link" target="_blank" class="social-link">
-          <el-tooltip :content="link.text" placement="bottom" effect="light" popper-class="custom-tooltip">
-            <div class="link-content">
-              <i-mdi-github v-if="link.icon === 'github'" />
-              <i-mdi-web v-else-if="link.icon === 'web'" />
-              <i-mdi-help-circle v-else-if="link.icon === 'help-circle'" />
-              <i-mdi-discord v-else-if="link.icon === 'discord'" />
-              <i-mdi-qqchat v-else-if="link.icon === 'qqchat'" />
-            </div>
-          </el-tooltip>
-        </a>
+    </aside>
+    <main class="main-content">
+      <header class="store-header">
+        <div class="store-title">
+          <h1>NcatBot 插件商店</h1>
+          <div v-if="lastUpdate" class="last-update">最后更新: {{ formatDate(lastUpdate) }}</div>
+        </div>
+        <div class="social-links">
+          <a v-for="link in socialLinks" :key="link.link" :href="link.link" target="_blank" class="social-link">
+            <el-tooltip :content="link.text" placement="bottom" effect="light" popper-class="custom-tooltip">
+              <div class="link-content">
+                <i-mdi-github v-if="link.icon === 'github'" />
+                <i-mdi-web v-else-if="link.icon === 'web'" />
+                <i-mdi-help-circle v-else-if="link.icon === 'help-circle'" />
+                <i-mdi-discord v-else-if="link.icon === 'discord'" />
+                <i-mdi-qqchat v-else-if="link.icon === 'qqchat'" />
+              </div>
+            </el-tooltip>
+          </a>
+        </div>
+      </header>
+      <div v-if="isLoading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载插件中...</div>
       </div>
-    </header>    <!-- 加载指示器 -->
-    <div v-if="isLoading" class="loading-container">
-      <div class="loading-spinner"></div>
-      <div class="loading-text">加载插件中...</div>
-    </div>
 
-    <div v-else>
-      <div class="search-container">
-        <div class="search-wrapper">
-          <div class="custom-search-input">
-            <div class="search-icon-wrapper">
-              <i-mdi-magnify class="search-icon" />
-            </div>
-            <input 
-              type="text" 
-              v-model="searchText" 
-              placeholder="搜索插件..."
-              class="search-field"
-            />
-            <div v-if="searchText" class="clear-icon-wrapper" @click="clearSearch">
-              <i-mdi-close class="clear-icon" />
+      <div v-else>
+        <div class="search-container">
+          <div class="search-wrapper">
+            <div class="custom-search-input">
+              <div class="search-icon-wrapper">
+                <i-mdi-magnify class="search-icon" />
+              </div>
+              <input 
+                type="text" 
+                v-model="searchText" 
+                placeholder="搜索插件..."
+                class="search-field"
+              />
+              <div v-if="searchText" class="clear-icon-wrapper" @click="clearSearch">
+                <i-mdi-close class="clear-icon" />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    
-      <div v-if="filteredPlugins.length === 0" class="no-results">
-        没有找到匹配的插件 😢
-      </div>
-      <div class="plugin-list">
-        <plugin-card
-          v-for="(plugin, index) in paginatedPlugins"
-          :key="plugin.id"
-          :plugin="plugin"
-          :highlight-text="searchText"
-          @search="searchForPlugin"
-          :style="{
-            animationDelay: `${index * 0.1 + 0.1}s`, 
-            animationName: 'fadeInUp',
-            animationDuration: '0.6s',
-            animationFillMode: 'both',
-            animationTimingFunction: 'cubic-bezier(0.215, 0.61, 0.355, 1)'
-          }"
-        />
-      </div>
       
-      <div v-if="filteredPlugins.length > pageSize" class="custom-pagination">
-        <div class="pagination-container">
-          <div 
-            class="pagination-arrow prev" 
-            :class="{ 'disabled': currentPage === 1 }" 
-            @click="currentPage > 1 && handlePageChange(currentPage - 1)"
-          >
-            <i-mdi-chevron-left />
-          </div>
-          
-          <div class="pagination-pages">
-            <div 
-              v-for="page in displayedPages" 
-              :key="page" 
-              class="page-number" 
-              :class="{ 'active': currentPage === page }"
-              @click="handlePageChange(page)"
-            >
-              {{ page }}
-            </div>
-          </div>
-          
-          <div 
-            class="pagination-arrow next" 
-            :class="{ 'disabled': currentPage === totalPages }" 
-            @click="currentPage < totalPages && handlePageChange(currentPage + 1)"
-          >
-            <i-mdi-chevron-right />
-          </div>
+        <div v-if="filteredPlugins.length === 0" class="no-results">
+          没有找到匹配的插件 😢
+        </div>
+        <div class="plugin-list">
+          <plugin-card
+            v-for="(plugin, index) in paginatedPlugins"
+            :key="plugin.id"
+            :plugin="plugin"
+            :highlight-text="searchText"
+            @search="searchForPlugin"
+            :style="{
+              animationDelay: `${index * 0.1 + 0.1}s`, 
+              animationName: 'fadeInUp',
+              animationDuration: '0.6s',
+              animationFillMode: 'both',
+              animationTimingFunction: 'cubic-bezier(0.215, 0.61, 0.355, 1)'
+            }"
+          />
         </div>
         
-        <div class="pagination-info">
-          <span>{{ currentPage }} / {{ totalPages }}</span>
-        </div>      </div>
-    </div>
+        <div v-if="filteredPlugins.length > pageSize" class="custom-pagination">
+          <div class="pagination-container">
+            <div 
+              class="pagination-arrow prev" 
+              :class="{ 'disabled': currentPage === 1 }" 
+              @click="currentPage > 1 && handlePageChange(currentPage - 1)"
+            >
+              <i-mdi-chevron-left />
+            </div>
+            
+            <div class="pagination-pages">
+              <div 
+                v-for="page in displayedPages" 
+                :key="page" 
+                class="page-number" 
+                :class="{ 'active': currentPage === page }"
+                @click="handlePageChange(page)"
+              >
+                {{ page }}
+              </div>
+            </div>
+            
+            <div 
+              class="pagination-arrow next" 
+              :class="{ 'disabled': currentPage === totalPages }" 
+              @click="currentPage < totalPages && handlePageChange(currentPage + 1)"
+            >
+              <i-mdi-chevron-right />
+            </div>
+          </div>
+          
+          <div class="pagination-info">
+            <span>{{ currentPage }} / {{ totalPages }}</span>
+          </div>      
+        </div>
+      </div>
+    </main>
   </div>
 </template>
 
@@ -143,7 +171,9 @@ function handleResize() {
 function adjustPageSize() {
   // 根据屏幕宽度计算每列能显示的数量
   let columns = 1;
-  if (windowWidth.value >= 1200) {
+  if (windowWidth.value >= 1600) {
+    columns = 4;
+  } else if (windowWidth.value >= 1200) {
     columns = 3;
   } else if (windowWidth.value >= 768) {
     columns = 2;
@@ -152,7 +182,7 @@ function adjustPageSize() {
   }
   
   // 设置为两行的总数量
-  pageSize.value = columns * 2;
+  pageSize.value = columns * 3;
   
   // 如果当前页因为pageSize变化而超出范围，则重置为最后一页
   const maxPage = Math.ceil(filteredPlugins.value.length / pageSize.value);
@@ -191,23 +221,66 @@ const searchForPlugin = (name: string) => {
   currentPage.value = 1; // 重置分页
 };
 
-// 过滤插件
-const filteredPlugins = computed(() => {
-  if (!searchText.value) {
-    return plugins.value;
-  }
-  
-  const searchLower = searchText.value.toLowerCase();
-  return plugins.value.filter((plugin: Plugin) => {
-    return (
-      plugin.nameEn.toLowerCase().includes(searchLower) ||
-      (plugin.nameZh && plugin.nameZh.toLowerCase().includes(searchLower)) ||
-      plugin.description.toLowerCase().includes(searchLower) ||
-      (typeof plugin.author === 'string' 
-        ? plugin.author.toLowerCase().includes(searchLower)
-        : plugin.author.name.toLowerCase().includes(searchLower))
-    );
+// tag 相关
+const selectedTags = ref<string[]>([]);
+
+const allTags = computed(() => {
+  const tagMap: Record<string, number> = {};
+  plugins.value.forEach((p) => {
+    if (Array.isArray(p.tags) && p.tags.length > 0) {
+      p.tags.forEach((t) => {
+        tagMap[t] = (tagMap[t] || 0) + 1;
+      });
+    }
   });
+  return Object.entries(tagMap)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+});
+
+const unclassifiedCount = computed(() =>
+  plugins.value.filter((p) => !p.tags || p.tags.length === 0).length
+);
+
+function toggleTag(tag: string) {
+  if (selectedTags.value.includes(tag)) {
+    selectedTags.value = selectedTags.value.filter((t) => t !== tag);
+  } else {
+    selectedTags.value.push(tag);
+  }
+  currentPage.value = 1;
+}
+
+// 过滤插件（支持tag和搜索）
+const filteredPlugins = computed(() => {
+  let filtered = plugins.value;
+  // tag过滤
+  if (selectedTags.value.length > 0) {
+    if (selectedTags.value.includes('__unclassified__')) {
+      // 只显示未分类
+      filtered = filtered.filter((p) => !p.tags || p.tags.length === 0);
+    } else {
+      // 只显示包含所选tag之一的插件
+      filtered = filtered.filter(
+        (p) => Array.isArray(p.tags) && p.tags.some((t) => selectedTags.value.includes(t))
+      );
+    }
+  }
+  // 搜索过滤
+  if (searchText.value) {
+    const searchLower = searchText.value.toLowerCase();
+    filtered = filtered.filter((plugin: Plugin) => {
+      return (
+        plugin.nameEn.toLowerCase().includes(searchLower) ||
+        (plugin.nameZh && plugin.nameZh.toLowerCase().includes(searchLower)) ||
+        plugin.description.toLowerCase().includes(searchLower) ||
+        (typeof plugin.author === 'string'
+          ? plugin.author.toLowerCase().includes(searchLower)
+          : plugin.author.name.toLowerCase().includes(searchLower))
+      );
+    });
+  }
+  return filtered;
 });
 
 // 分页处理
@@ -266,7 +339,7 @@ const handlePageChange = (page: number) => {
 
 <style scoped>
 .store-container {
-  max-width: 1200px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 2rem;
   min-height: 100vh;
@@ -283,6 +356,92 @@ const handlePageChange = (page: number) => {
   height: 5px;
   background: linear-gradient(to right, #ff69b4, #ffb6c1, #ff69b4);
   z-index: 100;
+}
+
+.store-container.with-sidebar {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.sidebar {
+  width: 220px;
+  min-width: 180px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(255, 105, 180, 0.08);
+  margin-right: 2rem;
+  padding: 1.2rem 1rem 1.5rem 1rem;
+  position: sticky;
+  top: 30px;
+  height: fit-content;
+  z-index: 10;
+}
+
+.sidebar-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ff69b4;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tag-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.98rem;
+  color: #ff69b4;
+  background: rgba(255, 192, 203, 0.08);
+  border: 1px solid rgba(255, 192, 203, 0.15);
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.tag-filter-item.selected {
+  background: linear-gradient(90deg, #ffb6c1 0%, #fff 100%);
+  color: #fff;
+  border: 1.5px solid #ff69b4;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.08);
+}
+
+.tag-filter-item.unclassified {
+  color: #888;
+  background: rgba(200,200,200,0.08);
+  border: 1px dashed #ccc;
+}
+
+.tag-filter-item.unclassified.selected {
+  background: linear-gradient(90deg, #eee 0%, #fff 100%);
+  color: #ff69b4;
+  border: 1.5px solid #ff69b4;
+}
+
+.tag-name {
+  flex: 1;
+  text-align: left;
+}
+
+.tag-count {
+  font-size: 0.92em;
+  color: #aaa;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .loading-container {
@@ -696,9 +855,27 @@ const handlePageChange = (page: number) => {
   }
 }
 
+@media (max-width: 768px) {
+  .store-container.with-sidebar {
+    flex-direction: column;
+    display: block;
+  }
+  
+  .sidebar {
+    display: none;
+  }
+}
+
 @media (min-width: 1200px) {
   .plugin-list {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+@media (min-width: 1600px) {
+  .plugin-list {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 </style>

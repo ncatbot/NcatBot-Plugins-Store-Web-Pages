@@ -1,9 +1,6 @@
-<template>  <div 
-    class="plugin-card ripple" 
-    :class="{ 'highlight': highlightText && hasMatch }"
-    @mouseenter="animateCard" 
-    @mouseleave="resetCard"
-  >
+<template>
+  <div class="plugin-card ripple" :class="{ 'highlight': highlightText && hasMatch }" @mouseenter="animateCard"
+    @mouseleave="resetCard">
     <div class="plugin-header">
       <h2 class="plugin-name">{{ plugin.nameEn }}</h2>
       <h3 class="plugin-name-zh" v-if="plugin.nameZh">{{ plugin.nameZh }}</h3>
@@ -12,61 +9,76 @@
           <i-mdi-github />
         </div>
       </a>
-    </div>    
+    </div>
     <div class="plugin-description">
       <div class="custom-collapse" @click="toggleDescription">
-        <div class="custom-collapse-header" :class="{'is-active': isDescriptionOpen}">
+        <div class="custom-collapse-header" :class="{ 'is-active': isDescriptionOpen }">
           <div class="description-title">
             <i-mdi-text-box-outline class="icon"></i-mdi-text-box-outline>
             <span>简介</span>
           </div>
           <div class="collapse-indicator">
-            <i-mdi-chevron-down class="collapse-icon" :class="{'is-active': isDescriptionOpen}"></i-mdi-chevron-down>
+            <i-mdi-chevron-down class="collapse-icon" :class="{ 'is-active': isDescriptionOpen }"></i-mdi-chevron-down>
           </div>
         </div>
-        <div class="custom-collapse-content" :class="{'is-active': isDescriptionOpen}">
+        <div class="custom-collapse-content" :class="{ 'is-active': isDescriptionOpen }">
           <div class="description-content">
-            <p v-html="highlightedDescription"></p>
+            <span v-html="highlightedDescription"></span>
           </div>
         </div>
       </div>
     </div>
-      <div class="card-content">
+    <div class="card-content">
       <div class="plugin-dependencies">
         <h4><i-mdi-puzzle-outline class="icon"></i-mdi-puzzle-outline> 依赖项</h4>
         <ul>
-            <template v-if="plugin.dependencies && plugin.dependencies.length > 0">
-              <li v-for="dep in plugin.dependencies" 
-                  :key="dep" 
-                  :class="{ 'missing': !isPluginExist(dep) }">
-                <el-tooltip v-if="!isPluginExist(dep)" content="插件状态异常" placement="top" effect="light" popper-class="custom-tooltip">
-                  <a @click="handleMissingPlugin(dep)">{{ dep }}</a>
-                </el-tooltip>
-                <a v-else-if="dep === 'NcatBot'" href="https://github.com/liyihao1110/NcatBot" target="_blank">{{ dep }}</a>
-                <a v-else href="#" @click.prevent="searchForPlugin(dep)">{{ dep }}</a>
-              </li>
-            </template>
-            <li v-else class="no-dependency">
-              <span>无依赖</span>
+          <template v-if="plugin.dependencies && plugin.dependencies.length > 0">
+            <li v-for="dep in plugin.dependencies" :key="dep" :class="{ 'missing': !isPluginExist(dep) }">
+              <el-tooltip v-if="!isPluginExist(dep)" content="插件状态异常" placement="top" effect="light"
+                popper-class="custom-tooltip">
+                <a @click="handleMissingPlugin(dep)">{{ dep }}</a>
+              </el-tooltip>
+              <a v-else-if="dep === 'NcatBot'" href="https://github.com/liyihao1110/NcatBot" target="_blank">{{ dep
+                }}</a>
+              <a v-else href="#" @click.prevent="searchForPlugin(dep)">{{ dep }}</a>
             </li>
+          </template>
+          <li v-else class="no-dependency">
+            <span>无依赖</span>
+          </li>
         </ul>
+      </div>
+      <div class="plugin-latest-version">
+        <h4><i-mdi-calendar-clock class="icon"></i-mdi-calendar-clock> 最新版本</h4>
+        <div class="version-badge">
+          <span class="version-text">{{ plugin.latestVersion || '未指定' }}</span>
+        </div>
+      </div>
+    </div>    <!-- 显示标签 -->
+    <div v-if="plugin.tags && plugin.tags.length > 0" class="plugin-tags">
+      <h4><i-mdi-tag-multiple class="icon"></i-mdi-tag-multiple> 标签</h4>
+      <div class="tags-list">
+        <span
+          v-for="tag in plugin.tags"
+          :key="tag"
+          class="plugin-tag"
+          @click="$emit('tag-select', tag)"
+        >
+          {{ tag }}
+        </span>
       </div>
     </div>
     
     <div class="plugin-meta">
       <div class="plugin-author">
         <span><i-mdi-account class="icon"></i-mdi-account> 作者:</span>
-        <a v-if="typeof plugin.author === 'object' && plugin.author.name !== 'Unknown'" 
-           :href="plugin.author.github" 
-           target="_blank" 
-           v-html="highlightedAuthor"></a>
+        <a v-if="typeof plugin.author === 'object' && plugin.author.name !== 'Unknown'" :href="plugin.author.github"
+          target="_blank" v-html="highlightedAuthor"></a>
         <a v-else-if="typeof plugin.author === 'string' && plugin.author !== 'Unknown'"
-           :href="`https://github.com/${plugin.author}`" 
-           target="_blank" 
-           v-html="highlightedAuthor"></a>
+          :href="`https://github.com/${plugin.author}`" target="_blank" v-html="highlightedAuthor"></a>
         <span v-else v-html="highlightedAuthor"></span>
       </div>
-      
+
       <div class="plugin-license">
         <span><i-mdi-license class="icon"></i-mdi-license> 许可证:</span>
         <a v-if="plugin.license?.type" :href="plugin.license.link" target="_blank">{{ plugin.license.type }}</a>
@@ -94,11 +106,11 @@ function toggleDescription() {
   isDescriptionOpen.value = !isDescriptionOpen.value;
 }
 
-const emit = defineEmits(['search']);
+const emit = defineEmits(['search', 'tag-select']);
 
 const hasMatch = computed(() => {
   if (!props.highlightText) return false;
-  
+
   const searchText = props.highlightText.toLowerCase();
   return (
     props.plugin.nameEn.toLowerCase().includes(searchText) ||
@@ -106,42 +118,42 @@ const hasMatch = computed(() => {
     props.plugin.description.toLowerCase().includes(searchText) ||
     (typeof props.plugin.author === 'string' && props.plugin.author.toLowerCase().includes(searchText)) ||
     (typeof props.plugin.author === 'object' && props.plugin.author.name && props.plugin.author.name.toLowerCase().includes(searchText))
-    );
-  });
+  );
+});
 
-  const highlightedDescription = computed(() => {
-    if (!props.highlightText) return props.plugin.description.replace(/\n/g, '<br>');
-    
-    return props.plugin.description.replace(/\n/g, '<br>').replace(
+const highlightedDescription = computed(() => {
+  if (!props.highlightText) return props.plugin.description.replace(/\n/g, '<br>');
+
+  return props.plugin.description.replace(/\n/g, '<br>').replace(
     new RegExp(`(${props.highlightText})`, 'gi'),
     '<span class="highlight-text">$1</span>'
-    );
-  });
+  );
+});
 
-  const highlightedAuthor = computed(() => {
-    if (!props.highlightText) {
-    return typeof props.plugin.author === 'string' 
-      ? props.plugin.author 
+const highlightedAuthor = computed(() => {
+  if (!props.highlightText) {
+    return typeof props.plugin.author === 'string'
+      ? props.plugin.author
       : props.plugin.author.name || 'Unknown';
-    }
-    
-    const authorName = typeof props.plugin.author === 'string' 
-    ? props.plugin.author 
+  }
+
+  const authorName = typeof props.plugin.author === 'string'
+    ? props.plugin.author
     : props.plugin.author.name || 'Unknown';
-    
-    return authorName.replace(
+
+  return authorName.replace(
     new RegExp(`(${props.highlightText})`, 'gi'),
     '<span class="highlight-text">$1</span>'
-    );
-  });
+  );
+});
 
 // 检查插件是否存在
 function isPluginExist(pluginName: string) {
   // 检查 NcatBot 是特殊情况，始终存在
   if (pluginName === 'NcatBot') return true;
-  
-  return plugins.value.some(p => 
-    p.nameEn === pluginName || 
+
+  return plugins.value.some(p =>
+    p.nameEn === pluginName ||
     (p.id && p.id.toLowerCase() === pluginName.toLowerCase())
   );
 }
@@ -302,6 +314,7 @@ function resetCard(event: MouseEvent) {
   border-radius: 50%;
   background-color: rgba(255, 192, 203, 0.1);
   border: 1px solid rgba(255, 192, 203, 0.2);
+  margin-left: auto;
 }
 
 .plugin-link:hover {
@@ -327,27 +340,32 @@ function resetCard(event: MouseEvent) {
 
 .card-content {
   flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 /* 自定义折叠面板样式 */
 .custom-collapse {
   width: 100%;
   cursor: pointer;
-}
-
-.custom-collapse-header {
   background-color: rgba(255, 192, 203, 0.08);
   border: 1px solid rgba(255, 192, 203, 0.2);
   border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.custom-collapse-header {
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
-  transition: all 0.3s;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.custom-collapse-header:hover {
+.custom-collapse:hover {
   background-color: rgba(255, 192, 203, 0.15);
   border-color: rgba(255, 192, 203, 0.4);
   box-shadow: 0 2px 6px rgba(255, 105, 180, 0.1);
@@ -369,18 +387,19 @@ function resetCard(event: MouseEvent) {
 }
 
 .custom-collapse-content {
-  max-height: 0;
+  max-height: 2.5em;
   overflow: hidden;
   transition: max-height 0.3s ease, padding 0.3s ease;
-  padding: 0;
-  opacity: 0;
+  padding: 0 0.5rem;
+  opacity: 1;
+  white-space: nowrap;
 }
 
 .custom-collapse-content.is-active {
-  max-height: 500px; /* 足够大以适应内容 */
+  max-height: 500px;
   padding: 1rem 0.5rem;
-  opacity: 1;
-  transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in, padding 0.3s ease;
+  white-space: normal;
+  transition: max-height 0.5s ease-in-out, padding 0.3s ease;
 }
 
 .description-title {
@@ -396,6 +415,13 @@ function resetCard(event: MouseEvent) {
   padding: 0.5rem;
   line-height: 1.6;
   color: #555;
+}
+
+.custom-collapse-content:not(.is-active) .description-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 .icon {
@@ -509,6 +535,59 @@ function resetCard(event: MouseEvent) {
   text-shadow: 0 0 1px rgba(255, 20, 147, 0.3);
 }
 
+.plugin-latest-version {
+  margin-bottom: 1rem;
+}
+
+.plugin-latest-version h4 {
+  font-size: 0.9rem;
+  color: #ff69b4;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.plugin-latest-version .version-badge {
+  background-color: rgba(255, 192, 203, 0.1);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  transition: all 0.3s;
+  border: 1px solid rgba(255, 192, 203, 0.2);
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.plugin-latest-version .version-badge::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 192, 203, 0.2);
+  transition: left 0.3s ease;
+}
+
+.plugin-latest-version .version-badge:hover {
+  background-color: rgba(255, 192, 203, 0.1);
+  border-color: rgba(255, 192, 203, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(255, 105, 180, 0.1);
+}
+
+.plugin-latest-version .version-badge:hover::after {
+  left: 0;
+}
+
+.plugin-latest-version .version-text {
+  color: #ff69b4;
+  position: relative;
+  z-index: 1;
+}
+
 .plugin-meta {
   display: flex;
   justify-content: space-between;
@@ -559,24 +638,85 @@ function resetCard(event: MouseEvent) {
   color: #ff1493;
 }
 
+.plugin-dependencies, .plugin-latest-version {
+  width: calc(50% - 0.5rem);
+  min-width: 100px;
+}
+
+.plugin-tags {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.plugin-tags h4 {
+  font-size: 0.9rem;
+  color: #ff69b4;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.plugin-tag {
+  background-color: rgba(255, 192, 203, 0.15);
+  color: #ff69b4;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 16px;
+  transition: all 0.3s;
+  cursor: pointer;
+  border: 1px solid rgba(255, 192, 203, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.plugin-tag::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 192, 203, 0.2);
+  transition: left 0.3s ease;
+  z-index: 0;
+}
+
+.plugin-tag:hover {
+  background-color: rgba(255, 192, 203, 0.2);
+  border-color: rgba(255, 192, 203, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(255, 105, 180, 0.1);
+}
+
+.plugin-tag:hover::after {
+  left: 0;
+}
+
 @media (max-width: 768px) {
   .plugin-card {
     padding: 1rem;
   }
-  
+
   .plugin-header {
     flex-direction: column;
   }
-  
+
   .plugin-name-zh {
     margin-top: 2px;
     margin-bottom: 8px;
   }
-  
+
   .plugin-link {
     align-self: flex-start;
   }
-  
+
   .plugin-meta {
     flex-direction: column;
     gap: 0.5rem;
