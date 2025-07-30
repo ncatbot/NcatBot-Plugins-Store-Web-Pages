@@ -2,8 +2,10 @@
   <div class="plugin-card ripple" :class="{ 'highlight': highlightText && hasMatch }" @mouseenter="animateCard"
     @mouseleave="resetCard">
     <div class="plugin-header">
-      <h2 class="plugin-name">{{ plugin.nameEn }}</h2>
-      <h3 class="plugin-name-zh" v-if="plugin.nameZh">{{ plugin.nameZh }}</h3>
+      <a :href="plugin.link" target="_blank" class="plugin-title-link" style="text-decoration:none;">
+        <h2 class="plugin-name" style="cursor:pointer; color:#ff69b4; display:inline;">{{ plugin.nameEn }}</h2>
+        <h3 class="plugin-name-zh" v-if="plugin.nameZh" style="cursor:pointer; color:#ff69b4; display:inline; margin-left:8px;">{{ plugin.nameZh }}</h3>
+      </a>
       <a :href="plugin.link" target="_blank" class="plugin-link">
         <div class="github-icon-wrapper">
           <i-mdi-github />
@@ -68,7 +70,7 @@
         </span>
       </div>
     </div>
-    
+
     <div class="plugin-meta">
       <div class="plugin-author">
         <span><i-mdi-account class="icon"></i-mdi-account> 作者:</span>
@@ -106,7 +108,7 @@ function toggleDescription() {
   isDescriptionOpen.value = !isDescriptionOpen.value;
 }
 
-const emit = defineEmits(['search', 'tag-select']);
+const emit = defineEmits(['search', 'tag-select', 'plugin-title-click']);
 
 const hasMatch = computed(() => {
   if (!props.highlightText) return false;
