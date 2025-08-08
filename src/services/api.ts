@@ -32,6 +32,7 @@ export interface ApiPlugin {
   funcs: ApiPluginFunction[]
   configs: ApiPluginConfig[]
   repository: string
+  license?: string
 }
 
 export interface ApiResponse {
