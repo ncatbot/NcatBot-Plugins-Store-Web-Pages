@@ -57,9 +57,9 @@
               <div class="search-icon-wrapper">
                 <i-mdi-magnify class="search-icon" />
               </div>
-              <input 
-                type="text" 
-                v-model="searchText" 
+              <input
+                type="text"
+                v-model="searchText"
                 placeholder="搜索插件..."
                 class="search-field"
               />
@@ -69,7 +69,7 @@
             </div>
           </div>
         </div>
-      
+
         <div v-if="filteredPlugins.length === 0" class="no-results">
           没有找到匹配的插件 😢
         </div>
@@ -80,8 +80,9 @@
             :plugin="plugin"
             :highlight-text="searchText"
             @search="searchForPlugin"
+            @plugin-title-click="goToPluginDetail"
             :style="{
-              animationDelay: `${index * 0.1 + 0.1}s`, 
+              animationDelay: `${index * 0.1 + 0.1}s`,
               animationName: 'fadeInUp',
               animationDuration: '0.6s',
               animationFillMode: 'both',
@@ -89,41 +90,41 @@
             }"
           />
         </div>
-        
+
         <div v-if="filteredPlugins.length > pageSize" class="custom-pagination">
           <div class="pagination-container">
-            <div 
-              class="pagination-arrow prev" 
-              :class="{ 'disabled': currentPage === 1 }" 
+            <div
+              class="pagination-arrow prev"
+              :class="{ 'disabled': currentPage === 1 }"
               @click="currentPage > 1 && handlePageChange(currentPage - 1)"
             >
               <i-mdi-chevron-left />
             </div>
-            
+
             <div class="pagination-pages">
-              <div 
-                v-for="page in displayedPages" 
-                :key="page" 
-                class="page-number" 
+              <div
+                v-for="page in displayedPages"
+                :key="page"
+                class="page-number"
                 :class="{ 'active': currentPage === page }"
                 @click="handlePageChange(page)"
               >
                 {{ page }}
               </div>
             </div>
-            
-            <div 
-              class="pagination-arrow next" 
-              :class="{ 'disabled': currentPage === totalPages }" 
+
+            <div
+              class="pagination-arrow next"
+              :class="{ 'disabled': currentPage === totalPages }"
               @click="currentPage < totalPages && handlePageChange(currentPage + 1)"
             >
               <i-mdi-chevron-right />
             </div>
           </div>
-          
+
           <div class="pagination-info">
             <span>{{ currentPage }} / {{ totalPages }}</span>
-          </div>      
+          </div>
         </div>
       </div>
     </main>
@@ -135,6 +136,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import PluginCard from '../components/plugin-store/PluginCard.vue';
 import { plugins, socialLinks, loadPluginsFromAPI, lastUpdate } from '../data/plugins';
 import type { Plugin } from '../types/plugin';
+import { useRouter } from 'vue-router';
+const router = useRouter();
 
 // 搜索
 const searchText = ref('');
@@ -180,10 +183,10 @@ function adjustPageSize() {
   } else {
     columns = 1;
   }
-  
+
   // 设置为两行的总数量
   pageSize.value = columns * 3;
-  
+
   // 如果当前页因为pageSize变化而超出范围，则重置为最后一页
   const maxPage = Math.ceil(filteredPlugins.value.length / pageSize.value);
   if (currentPage.value > maxPage && maxPage > 0) {
@@ -194,7 +197,7 @@ function adjustPageSize() {
 // 在组件挂载和卸载时添加/移除窗口大小变化的监听器
 onMounted(async () => {
   window.addEventListener('resize', handleResize);
-  
+
   // 从API加载插件
   try {
     isLoading.value = true;
@@ -204,7 +207,7 @@ onMounted(async () => {
   } finally {
     isLoading.value = false;
   }
-  
+
   adjustPageSize(); // 初始调整
 });
 
@@ -298,13 +301,13 @@ const totalPages = computed(() => {
 const displayedPages = computed(() => {
   const pages = [];
   const maxDisplayPages = 5; // 最多显示5个页码
-  
+
   // 总页数小于等于最大显示页数，显示所有页码
   if (totalPages.value <= maxDisplayPages) {
     for (let i = 1; i <= totalPages.value; i++) {
       pages.push(i);
     }
-  } 
+  }
   // 总页数大于最大显示页数
   else {
     // 当前页接近开始
@@ -312,13 +315,13 @@ const displayedPages = computed(() => {
       for (let i = 1; i <= 5; i++) {
         pages.push(i);
       }
-    } 
+    }
     // 当前页接近结尾
     else if (currentPage.value >= totalPages.value - 2) {
       for (let i = totalPages.value - 4; i <= totalPages.value; i++) {
         pages.push(i);
       }
-    } 
+    }
     // 当前页在中间
     else {
       for (let i = currentPage.value - 2; i <= currentPage.value + 2; i++) {
@@ -326,7 +329,7 @@ const displayedPages = computed(() => {
       }
     }
   }
-  
+
   return pages;
 });
 
@@ -335,6 +338,10 @@ const handlePageChange = (page: number) => {
   currentPage.value = page;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+
+function goToPluginDetail(id: string) {
+  router.push(`/plugin/${id}`);
+}
 </script>
 
 <style scoped>
@@ -810,18 +817,18 @@ const handlePageChange = (page: number) => {
     padding: 1rem;
     border-radius: 12px;
   }
-  
+
   .social-links {
     width: 100%;
     justify-content: center;
     gap: 0.8rem;
     margin-top: 0.5rem;
   }
-  
+
   .link-text {
     display: none;
   }
-  
+
   .store-container {
     padding: 0.8rem;
   }
@@ -830,25 +837,25 @@ const handlePageChange = (page: number) => {
     font-size: 1.5rem;
     text-align: center;
   }
-  
+
   .store-title h1::after {
     left: 50%;
     transform: translateX(-50%);
   }
-  
+
   .search-wrapper {
     max-width: 100%;
   }
     .pagination-pages {
     gap: 0.2rem;
   }
-  
+
   .page-number {
     width: 32px;
     height: 32px;
     font-size: 0.85rem;
   }
-  
+
   .pagination-arrow {
     width: 36px;
     height: 36px;
@@ -860,7 +867,7 @@ const handlePageChange = (page: number) => {
     flex-direction: column;
     display: block;
   }
-  
+
   .sidebar {
     display: none;
   }
@@ -878,4 +885,8 @@ const handlePageChange = (page: number) => {
   }
 }
 
+.plugin-title {
+  cursor: pointer;
+  color: #ff69b4;
+}
 </style>
