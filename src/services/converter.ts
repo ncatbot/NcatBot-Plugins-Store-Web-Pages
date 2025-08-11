@@ -1,6 +1,6 @@
 import type { Plugin, Author, License } from '../types/plugin'
 import { licenseLinks } from '../types/plugin'
-import type { ApiResponse } from './api'
+import type { ApiResponse, ApiPlugin } from './api'
 
 /**
  * 将API返回的插件数据转换为应用内的Plugin类型
@@ -27,8 +27,19 @@ export function convertApiPluginsToAppPlugins(apiResponse: ApiResponse): Plugin[
     }
 
     // 处理许可证信息
-    const license: License | null = null
-    // 如果将来API提供了许可证信息，可以在这里处理
+    let license: License | null = null;
+    
+    // 处理API插件中的许可证信息
+    if (apiPlugin.license) {
+      const licenseType = apiPlugin.license;
+      // 查找预定义的许可证链接
+      const predefinedLink = licenseLinks[licenseType as keyof typeof licenseLinks];
+      
+      license = {
+        type: licenseType,
+        link: predefinedLink || `https://opensource.org/licenses/${encodeURIComponent(licenseType)}`
+      };
+    }
 
     // 创建Plugin对象
     const plugin: Plugin = {

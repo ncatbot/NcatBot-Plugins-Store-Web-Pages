@@ -32,7 +32,7 @@
     </div>
     <div class="card-content">
       <div class="plugin-dependencies">
-        <h4><i-mdi-puzzle-outline class="icon"></i-mdi-puzzle-outline> 依赖项</h4>
+        <h4><i-mdi-puzzle-outline class="icon"></i-mdi-puzzle-outline> 依赖插件</h4>
         <ul>
           <template v-if="plugin.dependencies && plugin.dependencies.length > 0">
             <li v-for="dep in plugin.dependencies" :key="dep" :class="{ 'missing': !isPluginExist(dep) }">
@@ -83,8 +83,8 @@
 
       <div class="plugin-license">
         <span><i-mdi-license class="icon"></i-mdi-license> 许可证:</span>
-        <a v-if="plugin.license?.type" :href="plugin.license.link" target="_blank">{{ plugin.license.type }}</a>
-        <span v-else>未指定</span>
+        <a v-if="plugin.license?.type" :href="plugin.license.link" target="_blank" class="license-link">{{ plugin.license.type }}</a>
+        <span v-else class="license-unspecified">未指定</span>
       </div>
     </div>
   </div>
@@ -616,7 +616,8 @@ function resetCard(event: MouseEvent) {
 }
 
 .plugin-author a::after,
-.plugin-license a::after {
+.plugin-license a::after,
+.license-link::after {
   content: '';
   position: absolute;
   width: 0;
@@ -628,8 +629,16 @@ function resetCard(event: MouseEvent) {
 }
 
 .plugin-author a:hover::after,
-.plugin-license a:hover::after {
+.plugin-license a:hover::after,
+.license-link:hover::after {
   width: 100%;
+}
+
+.license-unspecified {
+  color: #888;
+  font-size: 0.85rem;
+  position: relative;
+  z-index: 1;
 }
 
 :deep(.highlight-text) {
